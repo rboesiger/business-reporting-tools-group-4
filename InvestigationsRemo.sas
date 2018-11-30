@@ -78,9 +78,11 @@ Quit;
 
 * investigating the delay in regards to the destination;
 Proc SQL;
-Select		carrier, dest , mean(arr_delay) as AverageDelay, (sum(delayed) / count(flight)) * 100 as PercentageOfDelayedFlights 
-From		INFOS.FLIGHTS_MODIFIED
-Where		carrier = 'EV' OR carrier = 'US'
+Create table infos.destination_differences as
+Select		Distinct A.carrier, A.dest , sum(A.arr_delay) as SumDelay, (sum(A.delayed) / count(A.flight)) * 100 as PercentageOfDelayedFlights, B.lat, B.lon 
+From		INFOS.FLIGHTS_MODIFIED as A Left Outer join INFOS.AIRPORTS as B
+On		A.dest = B.faa
+Where		carrier = 'EV'
 Group by	1, 2;
 Quit;
 
@@ -88,6 +90,7 @@ Quit;
 
 * investigating the delay in regards to the months;
 Proc SQL;
+Create table infos.monthly_difference as
 Select		carrier, month, mean(arr_delay) as AverageDelay, (sum(delayed) / count(flight)) * 100 as PercentageOfDelayedFlights, count(flight) as NumberOfFlights  
 From		INFOS.FLIGHTS_MODIFIED
 Where		carrier = 'EV' OR carrier = 'US'
@@ -114,3 +117,20 @@ Where		carrier = 'EV' OR carrier = 'US'
 Group by	1, 2;
 Quit;
  
+proc sql;
+Create table infos.ev_planes as
+select C.name, B.model, count(Distinct B.tailnum) as NumberOfPlanes 
+from infos.Airlines as C, infos.Planes as B, infos.Flights_modified as D
+where C.carrier = D.carrier and D.tailnum = B.tailnum and C.carrier = 'EV'
+group by 1, 2
+order by 1;
+quit;
+
+proc sql;
+
+select A.model, (sum(B.delayed) / count(B.flight)) * 100 as PersentageOfFlightsDelayed, count(B.flight) as NumberOfFlights 
+from infos.Planes as A, infos.Flights_modified as B
+where A.tailnum = B.tailnum
+group by A.model
+order by 2 Desc ;
+quit;
