@@ -57,7 +57,8 @@ run;
 
 * investigating the differences between the airports;
 Proc SQL;
-Select		origin, carrier, mean(arr_delay) as AverageDelay , sum(delayed) / count(flight) as PercentageOfDelayedFlights 
+Create table infos.airport_differences as
+Select		origin, carrier, mean(dep_delay) as AverageDepDelay , mean(arr_delay) as AverageArrDelay , sum(delayed) / count(flight) as PercentageOfDelayedFlights 
 From		INFOS.FLIGHTS_MODIFIED
 Where		carrier = 'EV' OR carrier = 'US'
 Group by	1, 2
