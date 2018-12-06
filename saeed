@@ -1,0 +1,54 @@
+libname infos 'C:\Users\smirzaee\Desktop\sql  group';
+*choosing 3 useful columns from plane table and create a new table called planes1;
+
+proc sql;
+create table infos.planes1 as
+select tailnum, year, model
+from infos.planes
+order by 2;
+quit;
+
+proc sql;
+
+*calculating the percentage of delyed for each model;
+
+create table infos.model_delayed as
+select A.model, (sum(B.delayed) / count(B.flight)) * 100 as Percent_of_Delayed, count(B.flight) as NumberOfFlights 
+from infos.Planes as A, infos.Flights_modified as B
+where A.tailnum = B.tailnum
+group by A.model
+order by 2,3 ;
+quit;
+
+
+*categorizing models based on the percentage of delays;
+
+data infos.model_delayed;
+set infos.model_delayed;
+if Percent_of_Delayed <20 then performance = "excelent";
+else if Percent_of_Delayed <40 then performance =  "good";
+else if Percent_of_Delayed <60 then performance = "fair";
+else performance = "poor";
+run;
+
+
+*creating tables for EV airline(worst airline) to check  if there is any relation between the number of delayes and model of airplanes that EV uses;
+
+proc sql;
+Create table infos.ev_planes as
+select C.name, B.model, count(Distinct B.tailnum) as NumberOfPlanes,G.performance as model_performance
+from infos.Airlines as C, infos.Planes as B, infos.Flights_modified as D, infos.model_delayed as G
+where C.carrier = D.carrier and D.tailnum = B.tailnum and C.carrier = 'EV'
+group by 1, 2
+order by 1;
+quit;
+
+ 
+*creating tables for US airline(best airline) to check  if there is any relation between the number of delayes and model of airplanes that US uses;
+proc sql;
+Create table infos.ev_planes as
+select C.name, B.model, count(Distinct B.tailnum) as NumberOfPlanes,G.performance as model_performance
+from infos.Airlines as C, infos.Planes as B, infos.Flights_modified as D, infos.model_delayed as G
+where C.carrier = D.carrier and D.tailnum = B.tailnum and C.carrier = 'US' and B.model=G.model
+group by 1, 2
+order by 1;
